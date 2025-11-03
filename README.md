@@ -1,6 +1,6 @@
 # BiComplex PyTorch
 
-Neural networks with bicomplex numbers using idempotent representation for PyTorch.
+Neural networks with bicomplex numbers using idempotent representation for an elegant adaptation with PyTorch.
 
 ## Overview
 
@@ -151,4 +151,5 @@ flake8 bicomplex_pytorch/
 
 ## Citation
 ...
+
 
