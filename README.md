@@ -30,55 +30,16 @@ where `z₁, z₂ ∈ ℂ` and `e₁, e₂` are idempotent elements. This allows
 ## Installation
 
 ### From PyPI (recommended)
-```bash
-pip install bicomplex-pytorch
-```
+...
 
 ### From source
-```bash
-git clone https://github.com/yourusername/bicomplex-pytorch.git
-cd bicomplex-pytorch
-pip install -e .
-```
+...
 
 ### Dependencies
-- Python >= 3.8
-- PyTorch >= 1.10.0
-- complexPyTorch >= 0.4.0
-
-## Quick Start
-```python
-import torch
-from bicomplex_pytorch import BiComplexLinear, BiComplexReLU, BiComplexMSELoss
-
-# Create a simple bicomplex network
-model = torch.nn.Sequential(
-    BiComplexLinear(10, 20),
-    BiComplexReLU(),
-    BiComplexLinear(20, 5)
-)
-
-# Bicomplex input: (batch_size, features, 4)
-# where 4 represents [a, b, c, d] of a+bi+cj+dij
-x = torch.randn(32, 10, 4)
-
-# Forward pass
-output = model(x)
-print(output.shape)  # torch.Size([32, 5, 4])
-
-# Training loop
-criterion = BiComplexMSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-for epoch in range(100):
-    optimizer.zero_grad()
-    predictions = model(x)
-    loss = criterion(predictions, target)
-    loss.backward()
-    optimizer.step()
-```
+...
 
 ## Features
+...
 
 ### Available Layers
 
@@ -190,3 +151,4 @@ flake8 bicomplex_pytorch/
 
 ## Citation
 ...
+
