@@ -7,6 +7,20 @@ All functions operate on bicomplex tensors in idempotent form (e1, e2).
 import torch
 from typing import Optional, Literal
 
+from ..core.arithmetic import (
+    exp_idempotent,
+    log_idempotent,
+    modulus,
+    modulus_squared,
+    divide_idempotent,
+    add_idempotent,
+    scalar_multiply_idempotent,
+    multiply_idempotent,
+    sqrt_idempotent,
+    power_idempotent,
+)
+from ..core.representations import is_idempotent
+
 def bicomplex_linear(
         input: tuple[torch.Tensor, torch.Tensor],
         weight: tuple[torch.Tensor, torch.Tensor],
