@@ -11,8 +11,6 @@ and performing transformations on bicomplex tensors.
 """
 
 import torch
-from typing import Tuple
-import numpy
 
 from representations import is_bicomplex, is_idempotent, to_idempotent, from_idempotent
 
