@@ -395,6 +395,30 @@ def norm_idempotent(tensor: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Te
     return (product, product)
 
 
+def modulus_squared(z: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+    """
+    Total magnitude squared: |e1|² + |e2|²
+
+    For complex tensors e1, e2:
+    |e1|² = real(e1)² + imag(e1)²
+    """
+    if z[0].is_complex():
+        e1_sq = z[0].real ** 2 + z[0].imag ** 2
+        e2_sq = z[1].real ** 2 + z[1].imag ** 2
+    else:
+        e1_sq = z[0] ** 2
+        e2_sq = z[1] ** 2
+
+    return e1_sq + e2_sq
+
+def modulus(z: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
+    """Total magnitude: sqrt(|e1|² + |e2|²)"""
+    return torch.sqrt(modulus_squared(z))
+
+def squared_idempotent_norm(z: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
+    """Component-wise norms: (|e1|², |e2|²)"""
+    return (torch.abs(z[0])**2, torch.abs(z[1])**2)
+
 def scalar_multiply_idempotent(scalar: float,
                                tensor: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
     """
