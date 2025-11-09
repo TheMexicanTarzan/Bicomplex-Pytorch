@@ -13,6 +13,7 @@ from ..core.arithmetic import (
     sqrt_idempotent,
     power_idempotent,
 )
+
 from ..core.representations import is_idempotent
 
 def bicomplex_max_pool1d(
@@ -56,9 +57,6 @@ tuple[tuple[torch.Tensor, torch.Tensor], tuple[torch.Tensor, torch.Tensor]]]:
     """
     if not is_idempotent(input):
         raise ValueError("Input must be a bicomplex tensor in idempotent form")
-
-    from ..core.arithmetic import modulus_squared
-
     # Compute modulus squared for comparison (avoid sqrt for efficiency)
     # We need to handle the shape properly for pooling
     batch, channels, length = input[0].shape

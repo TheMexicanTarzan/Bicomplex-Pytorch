@@ -20,6 +20,8 @@ from ..core.arithmetic import (
     power_idempotent,
 )
 from ..core.representations import is_idempotent
+from ..core.tensor_ops import matmul
+
 
 def bicomplex_linear(
         input: tuple[torch.Tensor, torch.Tensor],
@@ -164,7 +166,6 @@ def bicomplex_matmul(
         >>> c[0].shape, c[1].shape
         (torch.Size([32, 10, 15]), torch.Size([32, 10, 15]))
     """
-    from ..core.tensor_ops import matmul
     return matmul(input, other)
 
 
