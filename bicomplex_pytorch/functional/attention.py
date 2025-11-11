@@ -19,7 +19,6 @@ from ..core.tensor_ops import (
     matmul,
     bmm,
     transpose,
-    softmax as bc_softmax,
 )
 from ..core.representations import is_idempotent
 
