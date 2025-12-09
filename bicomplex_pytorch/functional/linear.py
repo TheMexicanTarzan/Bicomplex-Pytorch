@@ -1,5 +1,5 @@
 """
-Functional activation functions for bicomplex neural networks.
+Linear transformation functions for bicomplex neural networks.
 
 All functions operate on bicomplex tensors in idempotent form (e1, e2).
 """
