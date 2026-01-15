@@ -7,6 +7,65 @@ where i and j are imaginary units such that i² = j² = -1 and i j = j i.
 
 The module includes functions for creating, converting, extracting components,
 and performing transformations on bicomplex tensors.
+
+================================================================================
+BICOMPLEX NUMBER REPRESENTATIONS
+================================================================================
+
+This library supports two representations of bicomplex numbers:
+
+1. STANDARD (CARTESIAN) FORM:
+   - Tensor of shape (..., 4) with components [a, b, c, d]
+   - Represents z = a + bi + cj + dij
+   - Used for input/output and storage
+
+2. IDEMPOTENT FORM:
+   - Tuple of two complex tensors: (z₁, z₂)
+   - Based on idempotent basis elements: e₁ = (1+ij)/2, e₂ = (1-ij)/2
+   - Used for efficient computation (multiplication becomes component-wise)
+
+================================================================================
+IDEMPOTENT CONVENTION (IMPORTANT)
+================================================================================
+
+This library uses the following idempotent decomposition:
+
+For z = a + bi + cj + dij:
+    z₁ = (a + d) + (b + c)i    [coefficient of e₁]
+    z₂ = (a - d) + (b - c)i    [coefficient of e₂]
+
+Inverse transformation:
+    a = (Re(z₁) + Re(z₂)) / 2
+    b = (Im(z₁) + Im(z₂)) / 2
+    c = (Im(z₁) - Im(z₂)) / 2
+    d = (Re(z₁) - Re(z₂)) / 2
+
+NOTE ON MATHEMATICAL CONVENTIONS:
+---------------------------------
+Some mathematical literature (e.g., Price 2001, Luna-Elizarrarás et al.) uses:
+    z₁ = (a + d) + (b - c)i
+    z₂ = (a - d) + (b + c)i
+
+Our convention differs by swapping the signs on the imaginary parts. Both are
+mathematically valid and internally consistent. The key properties preserved are:
+- Multiplication is component-wise: (z₁,z₂)·(w₁,w₂) = (z₁w₁, z₂w₂)
+- Addition is component-wise: (z₁,z₂)+(w₁,w₂) = (z₁+w₁, z₂+w₂)
+- Roundtrip conversion: from_idempotent(to_idempotent(z)) = z
+
+When comparing results with external mathematical references, users should
+verify which convention is being used.
+
+================================================================================
+ZERO DIVISORS (NULL CONE)
+================================================================================
+
+Bicomplex numbers contain non-trivial zero divisors. The "null cone" is:
+    NC = {z ∈ BC : z₁ = 0 or z₂ = 0 in idempotent form}
+
+For example: z = (1 + ij)/2 = e₁ has z₁ = 1, z₂ = 0, making it a zero divisor.
+
+Zero divisors have no multiplicative inverse. Functions like inverse, division,
+and logarithm require special handling near the null cone.
 """
 import torch
 from typing import Tuple
