@@ -91,6 +91,9 @@ def bicomplex_relu(
 
     For z = (e1, e2), ReLU(z) = (ReLU(e1), ReLU(e2))
 
+    Since e1 and e2 are complex tensors, we apply "split ReLU":
+    ReLU(a + bi) = ReLU(a) + i*ReLU(b)
+
     Args:
         input: Bicomplex tensor in idempotent form
         inplace: If True, modifies input in-place
@@ -101,12 +104,19 @@ def bicomplex_relu(
     if not is_idempotent(input):
         raise ValueError("Input must be a bicomplex tensor in idempotent form")
 
+    def complex_relu(z):
+        """Apply ReLU to real and imaginary parts separately."""
+        return torch.complex(torch.relu(z.real), torch.relu(z.imag))
+
     if inplace:
-        input[0].relu_()
-        input[1].relu_()
+        # For inplace, we need to modify the underlying real/imag data
+        input[0].real.relu_()
+        input[0].imag.relu_()
+        input[1].real.relu_()
+        input[1].imag.relu_()
         return input
 
-    return (torch.relu(input[0]), torch.relu(input[1]))
+    return (complex_relu(input[0]), complex_relu(input[1]))
 
 
 def bicomplex_leaky_relu(
@@ -116,6 +126,9 @@ def bicomplex_leaky_relu(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Applies Leaky ReLU activation component-wise.
+
+    Since the idempotent components are complex tensors, we apply "split" leaky ReLU
+    to the real and imaginary parts separately.
 
     Args:
         input: Bicomplex tensor in idempotent form
@@ -128,10 +141,14 @@ def bicomplex_leaky_relu(
     if not is_idempotent(input):
         raise ValueError("Input must be a bicomplex tensor in idempotent form")
 
-    return (
-        torch.nn.functional.leaky_relu(input[0], negative_slope=negative_slope, inplace=inplace),
-        torch.nn.functional.leaky_relu(input[1], negative_slope=negative_slope, inplace=inplace)
-    )
+    def complex_leaky_relu(z):
+        """Apply Leaky ReLU to real and imaginary parts separately."""
+        return torch.complex(
+            torch.nn.functional.leaky_relu(z.real, negative_slope=negative_slope, inplace=inplace),
+            torch.nn.functional.leaky_relu(z.imag, negative_slope=negative_slope, inplace=inplace)
+        )
+
+    return (complex_leaky_relu(input[0]), complex_leaky_relu(input[1]))
 
 
 def bicomplex_elu(
@@ -141,6 +158,9 @@ def bicomplex_elu(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Applies ELU activation component-wise.
+
+    Since the idempotent components are complex tensors, we apply "split" ELU
+    to the real and imaginary parts separately.
 
     Args:
         input: Bicomplex tensor in idempotent form
@@ -153,10 +173,14 @@ def bicomplex_elu(
     if not is_idempotent(input):
         raise ValueError("Input must be a bicomplex tensor in idempotent form")
 
-    return (
-        torch.nn.functional.elu(input[0], alpha=alpha, inplace=inplace),
-        torch.nn.functional.elu(input[1], alpha=alpha, inplace=inplace)
-    )
+    def complex_elu(z):
+        """Apply ELU to real and imaginary parts separately."""
+        return torch.complex(
+            torch.nn.functional.elu(z.real, alpha=alpha, inplace=inplace),
+            torch.nn.functional.elu(z.imag, alpha=alpha, inplace=inplace)
+        )
+
+    return (complex_elu(input[0]), complex_elu(input[1]))
 
 
 def bicomplex_selu(
