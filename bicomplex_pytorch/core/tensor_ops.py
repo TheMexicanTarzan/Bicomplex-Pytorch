@@ -8,7 +8,7 @@ where e1 and e2 are complex PyTorch tensors.
 import torch
 from typing import Optional, Union
 
-from representations import is_idempotent
+from .representations import is_idempotent
 
 
 def matmul(a: tuple[torch.Tensor, torch.Tensor],
