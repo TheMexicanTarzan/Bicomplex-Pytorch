@@ -20,7 +20,7 @@ Example:
 # =============================================================================
 # Representations - Format conversions and type checking
 # =============================================================================
-from .representations import (
+from bicomplex_pytorch.core.representations import (
     # Type checking
     is_bicomplex,
     is_idempotent,

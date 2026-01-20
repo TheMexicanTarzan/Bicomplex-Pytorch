@@ -1,5 +1,5 @@
 import torch
-from typing import Optional, Literal
+from typing import Optional, Literal, Union
 
 from ..core.arithmetic import (
     exp_idempotent,
