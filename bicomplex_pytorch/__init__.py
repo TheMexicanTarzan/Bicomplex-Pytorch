@@ -39,7 +39,7 @@ from bicomplex_pytorch.__version__ import __version__
 # =============================================================================
 # Core - Representations (most commonly used at top level)
 # =============================================================================
-from bicomplex_pytorch.core.representations import (
+from .core import (
     # Type checking
     is_bicomplex,
     is_idempotent,
@@ -59,7 +59,7 @@ from bicomplex_pytorch.core.representations import (
 # =============================================================================
 # Core - Arithmetic (key operations at top level)
 # =============================================================================
-from bicomplex_pytorch.core.arithmetic import (
+from .core import (
     # Zero divisor handling
     ZeroDivisorError,
     is_zero_divisor,

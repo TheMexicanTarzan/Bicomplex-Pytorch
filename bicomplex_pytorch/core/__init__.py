@@ -20,7 +20,7 @@ Example:
 # =============================================================================
 # Representations - Format conversions and type checking
 # =============================================================================
-from bicomplex_pytorch.core.representations import (
+from .representations import (
     # Type checking
     is_bicomplex,
     is_idempotent,
@@ -44,7 +44,7 @@ from bicomplex_pytorch.core.representations import (
 # =============================================================================
 # Arithmetic - Mathematical operations on bicomplex numbers
 # =============================================================================
-from bicomplex_pytorch.core.arithmetic import (
+from .arithmetic import (
     # Zero divisor handling
     ZeroDivisorError,
     is_zero_divisor,
@@ -98,7 +98,7 @@ from bicomplex_pytorch.core.arithmetic import (
 # =============================================================================
 # Tensor Operations - PyTorch-like operations for bicomplex tensors
 # =============================================================================
-from bicomplex_pytorch.core.tensor_ops import (
+from .tensor_ops import (
     # Matrix operations
     matmul,
     bmm,

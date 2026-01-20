@@ -19,7 +19,7 @@ Example:
 # =============================================================================
 # Modules - Layer classes
 # =============================================================================
-from bicomplex_pytorch.nn.modules import (
+from .modules import (
     # Linear layers
     BiComplexLinear,
     BiComplexLinearFull,
