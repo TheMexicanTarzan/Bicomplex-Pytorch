@@ -18,7 +18,7 @@ Planned (stubs):
 # =============================================================================
 # Linear Layers (Implemented)
 # =============================================================================
-from bicomplex_pytorch.nn.modules.linear import (
+from .linear import (
     BiComplexLinear,
     BiComplexLinearFull,
     BiComplexLinearDiagonal,

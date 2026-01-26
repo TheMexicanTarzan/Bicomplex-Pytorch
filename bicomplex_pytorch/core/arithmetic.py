@@ -43,7 +43,7 @@ import torch
 from typing import Optional
 import warnings
 
-from representations import is_bicomplex, is_idempotent, to_idempotent, from_idempotent
+from .representations import is_bicomplex, is_idempotent, to_idempotent, from_idempotent
 
 
 # =============================================================================

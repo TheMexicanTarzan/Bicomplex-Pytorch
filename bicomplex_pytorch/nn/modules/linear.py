@@ -115,11 +115,13 @@ class BiComplexLinear(nn.Module):
         self.input_format = input_format
         self.output_format = output_format
 
+        # Note: complexPyTorch's ComplexLinear doesn't support bias parameter
+        # It always includes bias by default
         if shared_weights:
-            self.complex_layer = ComplexLinear(in_features, out_features, bias)
+            self.complex_layer = ComplexLinear(in_features, out_features)
         else:
-            self.branch1 = ComplexLinear(in_features, out_features, bias)
-            self.branch2 = ComplexLinear(in_features, out_features, bias)
+            self.branch1 = ComplexLinear(in_features, out_features)
+            self.branch2 = ComplexLinear(in_features, out_features)
 
     def forward(
         self,
@@ -241,10 +243,22 @@ class BiComplexLinearFull(nn.Module):
         # W₁₂: e2 -> e1 (cross-interaction)
         # W₂₁: e1 -> e2 (cross-interaction)
         # W₂₂: e2 -> e2 (self-interaction)
-        self.W11 = ComplexLinear(in_features, out_features, bias=False)
-        self.W12 = ComplexLinear(in_features, out_features, bias=False)
-        self.W21 = ComplexLinear(in_features, out_features, bias=False)
-        self.W22 = ComplexLinear(in_features, out_features, bias=False)
+        # Note: complexPyTorch's ComplexLinear always includes bias, so we handle
+        # bias separately below to have proper control
+        self.W11 = ComplexLinear(in_features, out_features)
+        self.W12 = ComplexLinear(in_features, out_features)
+        self.W21 = ComplexLinear(in_features, out_features)
+        self.W22 = ComplexLinear(in_features, out_features)
+        # Zero out the default biases from ComplexLinear since we manage bias separately
+        with torch.no_grad():
+            self.W11.fc_r.bias.zero_()
+            self.W11.fc_i.bias.zero_()
+            self.W12.fc_r.bias.zero_()
+            self.W12.fc_i.bias.zero_()
+            self.W21.fc_r.bias.zero_()
+            self.W21.fc_i.bias.zero_()
+            self.W22.fc_r.bias.zero_()
+            self.W22.fc_i.bias.zero_()
 
         # Biases (one for each output component)
         if bias:
