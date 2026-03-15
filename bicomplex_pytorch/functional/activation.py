@@ -602,6 +602,79 @@ def bicomplex_phase_activation(
 
     return (result_e1, result_e2)
 
+# =============================================================================
+# MVN ACTIVATION FUNCTIONS
+# =============================================================================
+def mvn_threshold(
+    input: torch.Tensor,
+    k: int
+) -> torch.Tensor:
+    """
+    Applies the multi-valued neuron (MVN) activation function to a complex tensor.
+
+    Maps each element of a complex tensor to its nearest k-th root of unity,
+    based solely on the argument (phase) of the element. The output always
+    lies on the unit circle.
+
+    This is a NON-HOLOMORPHIC activation: it discards magnitude information
+    entirely, making it non-differentiable in the classical complex sense.
+    PyTorch's Wirtinger calculus autograd still provides usable gradients
+    for optimization of real-valued losses.
+
+    Args:
+        z: Complex tensor of any shape.
+        k: Number of sectors (roots of unity). Must be a positive integer.
+
+    Returns:
+        Complex tensor of same shape, with each element mapped to the
+        nearest k-th root of unity: exp(i * 2 * pi * l / k), where
+        l = floor(angle(z) * k / (2 * pi)) and angle(z) is in [0, 2*pi).
+    """
+    # 1. Get the argument (phase) of the complex tensor.
+    # torch.angle returns values in [-pi, pi]
+    phase = torch.angle(input)
+
+    # 2. Shift the phase to be strictly in [0, 2*pi)
+    phase = torch.remainder(phase, 2 * torch.pi)
+
+    # 3. Determine the sector index 'l'
+    l = torch.floor((phase * k) / (2 * torch.pi))
+
+    # 4. Compute the output: epsilon^l = exp(i * 2 * pi * l / k)
+    theta = (2 * torch.pi * l) / k
+
+    # Return the discrete complex points on the unit circle
+    return torch.complex(torch.cos(theta), torch.sin(theta))
+
+
+def bicomplex_mvn_threshold(
+    input: tuple[torch.Tensor, torch.Tensor],
+    k: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """
+    Applies the multi-valued neuron (MVN) activation to a bicomplex tensor
+    in idempotent form.
+
+    For z = (e1, e2), MVN(z) = (MVN(e1), MVN(e2))
+
+    Each idempotent component is independently mapped to its nearest k-th
+    root of unity based on its complex phase. This is a NON-HOLOMORPHIC
+    activation that quantizes the phase while projecting onto the unit circle.
+
+    Args:
+        input: Bicomplex tensor in idempotent form
+        k: Number of sectors (roots of unity). Must be a positive integer.
+
+    Returns:
+        Activated bicomplex tensor in idempotent form, with each component
+        mapped to the nearest k-th root of unity.
+    """
+    if not is_idempotent(input):
+        raise ValueError("Input must be a bicomplex tensor in idempotent form")
+
+    return (mvn_threshold(input[0], k), mvn_threshold(input[1], k))
+
+
 
 # =============================================================================
 # BICOMPLEX-HOLOMORPHIC ACTIVATIONS
@@ -963,3 +1036,4 @@ def bicomplex_split_activation(
         raise ValueError("Input must be a bicomplex tensor in idempotent form")
 
     return (activation_fn(input[0]), activation_fn(input[1]))
+

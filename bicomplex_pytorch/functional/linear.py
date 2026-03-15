@@ -68,15 +68,10 @@ def bicomplex_linear(
         raise ValueError("Bias must be a bicomplex tensor in idempotent form")
 
     # Perform linear transformation for e1 component
-    output_e1 = torch.nn.functional.linear(input[0], weight[0], None)
+    output_e1 = torch.nn.functional.linear(input[0], weight[0], bias[0])
 
     # Perform linear transformation for e2 component
-    output_e2 = torch.nn.functional.linear(input[1], weight[1], None)
-
-    # Add bias if provided
-    if bias is not None:
-        output_e1 = output_e1 + bias[0]
-        output_e2 = output_e2 + bias[1]
+    output_e2 = torch.nn.functional.linear(input[1], weight[1], bias[1])
 
     return (output_e1, output_e2)
 
@@ -128,16 +123,11 @@ def bicomplex_bilinear(
     if bias is not None and not is_idempotent(bias):
         raise ValueError("Bias must be a bicomplex tensor in idempotent form")
 
-    # Perform bilinear transformation for e1 component
-    output_e1 = torch.nn.functional.bilinear(input1[0], input2[0], weight[0], None)
+        # Perform bilinear transformation for e1 component
+        output_e1 = torch.nn.functional.linear(input[0], weight[0], bias[0])
 
-    # Perform bilinear transformation for e2 component
-    output_e2 = torch.nn.functional.bilinear(input1[1], input2[1], weight[1], None)
-
-    # Add bias if provided
-    if bias is not None:
-        output_e1 = output_e1 + bias[0]
-        output_e2 = output_e2 + bias[1]
+        # Perform bilinear transformation for e2 component
+        output_e2 = torch.nn.functional.linear(input[1], weight[1], bias[1])
 
     return (output_e1, output_e2)
 
