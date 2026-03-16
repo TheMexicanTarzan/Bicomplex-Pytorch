@@ -45,6 +45,7 @@ WEIGHT CONFIGURATIONS
 
 ================================================================================
 """
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -64,6 +65,30 @@ def _unpack_input(x, input_format, in_features):
             f"got shape {x.shape}"
         )
     raise ValueError("Expected idempotent form input (tuple of complex tensors)")
+
+
+def _complex_kaiming_uniform_(weight, bias=None):
+    """Initialize complex weight and bias matching PyTorch's nn.Linear defaults.
+
+    nn.Linear uses Kaiming uniform with a=sqrt(5) for weights and
+    uniform(-1/sqrt(fan_in), 1/sqrt(fan_in)) for bias. We apply the
+    same scheme independently to the real and imaginary parts of complex
+    parameters, reproducing the distribution that complexPyTorch's
+    ComplexLinear obtained via two internal nn.Linear layers.
+    """
+    fan_in = weight.shape[1]
+    # Kaiming uniform: U(-bound, bound) where bound = sqrt(6 / (fan_in * (1 + a^2)))
+    # with a = sqrt(5) this gives bound = 1 / sqrt(fan_in)
+    bound = 1.0 / math.sqrt(fan_in)
+    with torch.no_grad():
+        real = torch.empty_like(weight.real).uniform_(-bound, bound)
+        imag = torch.empty_like(weight.imag).uniform_(-bound, bound)
+        weight.copy_(torch.complex(real, imag))
+    if bias is not None:
+        with torch.no_grad():
+            real = torch.empty_like(bias.real).uniform_(-bound, bound)
+            imag = torch.empty_like(bias.imag).uniform_(-bound, bound)
+            bias.copy_(torch.complex(real, imag))
 
 
 class BiComplexLinear(nn.Module):
@@ -112,23 +137,27 @@ class BiComplexLinear(nn.Module):
         self.output_format = output_format
 
         # Branch 1 weights (always present)
-        self.weight1 = nn.Parameter(
-            torch.randn(out_features, in_features, dtype=torch.cfloat) / (in_features ** 0.5)
-        )
+        self.weight1 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
         if bias:
-            self.bias1 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
+            self.bias1 = nn.Parameter(torch.empty(out_features, dtype=torch.cfloat))
         else:
             self.register_parameter('bias1', None)
 
         # Branch 2 weights (only when not sharing)
         if not shared_weights:
-            self.weight2 = nn.Parameter(
-                torch.randn(out_features, in_features, dtype=torch.cfloat) / (in_features ** 0.5)
-            )
+            self.weight2 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
             if bias:
-                self.bias2 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
+                self.bias2 = nn.Parameter(torch.empty(out_features, dtype=torch.cfloat))
             else:
                 self.register_parameter('bias2', None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        """Initialize parameters matching Kaiming uniform (PyTorch nn.Linear default)."""
+        _complex_kaiming_uniform_(self.weight1, self.bias1)
+        if not self.shared_weights:
+            _complex_kaiming_uniform_(self.weight2, self.bias2)
 
     def forward(
         self,
@@ -222,20 +251,36 @@ class BiComplexLinearFull(nn.Module):
         self.input_format = input_format
         self.output_format = output_format
 
-        scale = in_features ** 0.5
+        # Four weight matrices for full bicomplex linear transformation,
+        # each with its own internal bias (matching the old ComplexLinear
+        # behaviour where each sub-layer carried a learnable bias).
+        self.W11 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
+        self.W12 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
+        self.W21 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
+        self.W22 = nn.Parameter(torch.empty(out_features, in_features, dtype=torch.cfloat))
 
-        # Four weight matrices for full bicomplex linear transformation
-        self.W11 = nn.Parameter(torch.randn(out_features, in_features, dtype=torch.cfloat) / scale)
-        self.W12 = nn.Parameter(torch.randn(out_features, in_features, dtype=torch.cfloat) / scale)
-        self.W21 = nn.Parameter(torch.randn(out_features, in_features, dtype=torch.cfloat) / scale)
-        self.W22 = nn.Parameter(torch.randn(out_features, in_features, dtype=torch.cfloat) / scale)
+        # Per-matrix internal biases (zeroed at init but learnable)
+        self.b11 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
+        self.b12 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
+        self.b21 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
+        self.b22 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
 
+        # Explicit output biases
         if bias:
             self.bias1 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
             self.bias2 = nn.Parameter(torch.zeros(out_features, dtype=torch.cfloat))
         else:
             self.register_parameter('bias1', None)
             self.register_parameter('bias2', None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        """Initialize parameters matching Kaiming uniform (PyTorch nn.Linear default)."""
+        _complex_kaiming_uniform_(self.W11)
+        _complex_kaiming_uniform_(self.W12)
+        _complex_kaiming_uniform_(self.W21)
+        _complex_kaiming_uniform_(self.W22)
 
     def forward(
         self,
@@ -248,8 +293,8 @@ class BiComplexLinearFull(nn.Module):
         """
         z1, z2 = _unpack_input(x, self.input_format, self.in_features)
 
-        out1 = F.linear(z1, self.W11) + F.linear(z2, self.W12)
-        out2 = F.linear(z1, self.W21) + F.linear(z2, self.W22)
+        out1 = F.linear(z1, self.W11, self.b11) + F.linear(z2, self.W12, self.b12)
+        out2 = F.linear(z1, self.W21, self.b21) + F.linear(z2, self.W22, self.b22)
 
         if self.bias1 is not None:
             out1 = out1 + self.bias1
