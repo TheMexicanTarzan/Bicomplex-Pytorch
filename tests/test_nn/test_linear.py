@@ -68,8 +68,7 @@ class TestBiComplexLinear:
         expected_out1 = F.linear(z1, layer.weight1, layer.bias1)
         expected_out2 = F.linear(z2, layer.weight1, layer.bias1)
 
-        # Compare with layer output
-        out1, out2 = layer(x).split(1, dim=-1)  # won't work, use idempotent output
+        # Compare with layer output in idempotent form
         layer_idem = BiComplexLinear(5, 10, shared_weights=True, output_format='idempotent')
         # Copy weights
         with torch.no_grad():
