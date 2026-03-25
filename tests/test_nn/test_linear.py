@@ -3,7 +3,9 @@ Tests for bicomplex linear layers.
 """
 import pytest
 import torch
+import torch.nn.functional as F
 from bicomplex_pytorch import BiComplexLinear, to_idempotent, from_idempotent
+from bicomplex_pytorch.nn.modules.linear import _apply_complex
 
 
 class TestBiComplexLinear:
@@ -32,10 +34,10 @@ class TestBiComplexLinear:
         loss.backward()
 
         assert x.grad is not None, "Input gradients not computed"
-        assert layer.weight1.grad is not None, \
-            "weight1 gradients not computed"
-        assert layer.weight2.grad is not None, \
-            "weight2 gradients not computed"
+        assert layer.weight1_r.grad is not None, \
+            "weight1_r gradients not computed"
+        assert layer.weight2_r.grad is not None, \
+            "weight2_r gradients not computed"
 
     @pytest.mark.parametrize("shared_weights", [True, False])
     def test_shared_vs_independent_weights(self, shared_weights):
@@ -47,13 +49,13 @@ class TestBiComplexLinear:
         assert output.shape == (8, 10, 4)
 
         if shared_weights:
-            assert hasattr(layer, 'weight1'), \
-                "Shared weights config should have weight1"
-            assert not hasattr(layer, 'weight2'), \
-                "Shared weights config should not have weight2"
+            assert hasattr(layer, 'weight1_r'), \
+                "Shared weights config should have weight1_r"
+            assert not hasattr(layer, 'weight2_r'), \
+                "Shared weights config should not have weight2_r"
         else:
-            assert hasattr(layer, 'weight1') and hasattr(layer, 'weight2'), \
-                "Independent weights config should have both weight1 and weight2"
+            assert hasattr(layer, 'weight1_r') and hasattr(layer, 'weight2_r'), \
+                "Independent weights config should have both weight1_r and weight2_r"
 
     def test_shared_weights_produces_coupled_output(self):
         """Test that shared weights apply the same transform to both branches."""
@@ -63,17 +65,20 @@ class TestBiComplexLinear:
         # Get idempotent components of input
         z1, z2 = to_idempotent(x)
 
-        # Manually apply the shared weight to both
-        import torch.nn.functional as F
-        expected_out1 = F.linear(z1, layer.weight1, layer.bias1)
-        expected_out2 = F.linear(z2, layer.weight1, layer.bias1)
+        # Manually apply the shared weight to both using apply_complex
+        expected_out1 = _apply_complex(z1, layer.weight1_r, layer.weight1_i,
+                                       layer.bias1_r, layer.bias1_i)
+        expected_out2 = _apply_complex(z2, layer.weight1_r, layer.weight1_i,
+                                       layer.bias1_r, layer.bias1_i)
 
         # Compare with layer output in idempotent form
         layer_idem = BiComplexLinear(5, 10, shared_weights=True, output_format='idempotent')
         # Copy weights
         with torch.no_grad():
-            layer_idem.weight1.copy_(layer.weight1)
-            layer_idem.bias1.copy_(layer.bias1)
+            layer_idem.weight1_r.copy_(layer.weight1_r)
+            layer_idem.weight1_i.copy_(layer.weight1_i)
+            layer_idem.bias1_r.copy_(layer.bias1_r)
+            layer_idem.bias1_i.copy_(layer.bias1_i)
         actual_out1, actual_out2 = layer_idem(x)
 
         torch.testing.assert_close(expected_out1, actual_out1)
@@ -94,8 +99,8 @@ class TestBiComplexLinear:
         assert out1.shape == out2.shape == (4, 10, 4)
 
         # Verify no bias parameters exist
-        assert layer_no_bias.bias1 is None
-        assert layer_no_bias.bias2 is None
+        assert layer_no_bias.bias1_r is None
+        assert layer_no_bias.bias2_r is None
 
     def test_idempotent_round_trip(self):
         """Test that idempotent conversion is reversible."""
