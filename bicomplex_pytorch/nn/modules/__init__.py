@@ -11,7 +11,7 @@ Planned (stubs):
 - Convolution layers
 - Pooling layers
 - Normalization layers
-- Dropout layers
+- Dropout layers (ComplexDropout, BiComplexDropout)
 - Attention layers
 """
 
@@ -63,14 +63,15 @@ from .linear import (
 # )
 
 # =============================================================================
-# Dropout Layers (Not yet implemented)
+# Dropout Layers
 # =============================================================================
-# from bicomplex_pytorch.nn.modules.dropout import (
-#     BiComplexDropout,
-#     BiComplexDropout2d,
-#     BiComplexDropout3d,
-#     BiComplexAlphaDropout,
-# )
+from .dropout import (
+    ComplexDropout,
+    BiComplexDropout,
+)
+
+# Future:
+# from .dropout import BiComplexDropout2d, BiComplexDropout3d, BiComplexAlphaDropout
 
 # =============================================================================
 # Attention Layers (Not yet implemented)
@@ -108,11 +109,9 @@ __all__ = [
     # "BiComplexGroupNorm",
     # "BiComplexInstanceNorm1d",
     # "BiComplexInstanceNorm2d",
-    # Dropout (planned)
-    # "BiComplexDropout",
-    # "BiComplexDropout2d",
-    # "BiComplexDropout3d",
-    # "BiComplexAlphaDropout",
+    # Dropout (implemented)
+    "ComplexDropout",
+    "BiComplexDropout",
     # Attention (planned)
     # "BiComplexMultiHeadAttention",
     # "BiComplexSelfAttention",

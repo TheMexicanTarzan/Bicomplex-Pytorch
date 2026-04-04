@@ -23,6 +23,9 @@ from .modules import (
     # Linear layers
     BiComplexLinear,
     BiComplexLinearFull,
+    # Dropout layers
+    ComplexDropout,
+    BiComplexDropout,
 )
 
 # =============================================================================
@@ -60,9 +63,9 @@ __all__ = [
     # "BiComplexBatchNorm1d",
     # "BiComplexBatchNorm2d",
     # "BiComplexLayerNorm",
-    # Dropout layers (planned)
-    # "BiComplexDropout",
-    # "BiComplexDropout2d",
+    # Dropout layers (implemented)
+    "ComplexDropout",
+    "BiComplexDropout",
     # Attention layers (planned)
     # "BiComplexMultiHeadAttention",
 ]

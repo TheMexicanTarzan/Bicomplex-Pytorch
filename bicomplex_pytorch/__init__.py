@@ -93,6 +93,8 @@ from bicomplex_pytorch.core.tensor_ops import (
 from bicomplex_pytorch.nn import (
     BiComplexLinear,
     BiComplexLinearFull,
+    ComplexDropout,
+    BiComplexDropout,
 )
 
 # =============================================================================
@@ -141,6 +143,8 @@ __all__ = [
     # === NN Modules ===
     "BiComplexLinear",
     "BiComplexLinearFull",
+    "ComplexDropout",
+    "BiComplexDropout",
     # === Submodules ===
     "core",
     "functional",
