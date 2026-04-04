@@ -5,7 +5,7 @@ This subpackage contains stateful nn.Module classes for building
 bicomplex neural networks, following PyTorch's nn module conventions.
 
 Implemented:
-- Linear layers (BiComplexLinear, BiComplexLinearFull, BiComplexLinearDiagonal)
+- Linear layers (BiComplexLinear, BiComplexLinearFull)
 
 Planned (stubs):
 - Convolution layers
@@ -21,7 +21,6 @@ Planned (stubs):
 from .linear import (
     BiComplexLinear,
     BiComplexLinearFull,
-    BiComplexLinearDiagonal,
 )
 
 # =============================================================================
@@ -85,7 +84,6 @@ __all__ = [
     # Linear (implemented)
     "BiComplexLinear",
     "BiComplexLinearFull",
-    "BiComplexLinearDiagonal",
     # Convolution (planned)
     # "BiComplexConv1d",
     # "BiComplexConv2d",

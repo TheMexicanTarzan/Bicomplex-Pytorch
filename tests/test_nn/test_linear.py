@@ -3,7 +3,10 @@ Tests for bicomplex linear layers.
 """
 import pytest
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from bicomplex_pytorch import BiComplexLinear, to_idempotent, from_idempotent
+from bicomplex_pytorch.nn.modules.linear import _coupled_bias
 
 
 class TestBiComplexLinear:
@@ -32,10 +35,10 @@ class TestBiComplexLinear:
         loss.backward()
 
         assert x.grad is not None, "Input gradients not computed"
-        assert layer.branch1.weight.grad is not None, \
-            "Branch1 weight gradients not computed"
-        assert layer.branch2.weight.grad is not None, \
-            "Branch2 weight gradients not computed"
+        assert layer.weight1.grad is not None, \
+            "weight1 gradients not computed"
+        assert layer.weight2.grad is not None, \
+            "weight2 gradients not computed"
 
     @pytest.mark.parametrize("shared_weights", [True, False])
     def test_shared_vs_independent_weights(self, shared_weights):
@@ -47,13 +50,38 @@ class TestBiComplexLinear:
         assert output.shape == (8, 10, 4)
 
         if shared_weights:
-            assert hasattr(layer, 'complex_layer'), \
-                "Shared weights config should have complex_layer"
-            assert not hasattr(layer, 'branch2'), \
-                "Shared weights config should not have branch2"
+            assert hasattr(layer, 'weight1'), \
+                "Shared weights config should have weight1"
+            assert not hasattr(layer, 'weight2'), \
+                "Shared weights config should not have weight2"
         else:
-            assert hasattr(layer, 'branch1') and hasattr(layer, 'branch2'), \
-                "Independent weights config should have both branches"
+            assert hasattr(layer, 'weight1') and hasattr(layer, 'weight2'), \
+                "Independent weights config should have both weight1 and weight2"
+
+    def test_shared_weights_produces_coupled_output(self):
+        """Test that shared weights apply the same transform to both branches."""
+        layer = BiComplexLinear(5, 10, shared_weights=True)
+        x = torch.randn(4, 5, 4)
+
+        # Get idempotent components of input
+        z1, z2 = to_idempotent(x)
+
+        # Manually apply the shared weight to both
+        b = _coupled_bias(layer.bias1_r, layer.bias1_i)
+        expected_out1 = F.linear(z1, layer.weight1, b)
+        expected_out2 = F.linear(z2, layer.weight1, b)
+
+        # Compare with layer output in idempotent form
+        layer_idem = BiComplexLinear(5, 10, shared_weights=True, output_format='idempotent')
+        # Copy weights
+        with torch.no_grad():
+            layer_idem.weight1.copy_(layer.weight1)
+            layer_idem.bias1_r.copy_(layer.bias1_r)
+            layer_idem.bias1_i.copy_(layer.bias1_i)
+        actual_out1, actual_out2 = layer_idem(x)
+
+        torch.testing.assert_close(expected_out1, actual_out1)
+        torch.testing.assert_close(expected_out2, actual_out2)
 
     def test_bias_option(self):
         """Test layer with and without bias."""
@@ -68,6 +96,10 @@ class TestBiComplexLinear:
         out2 = layer_no_bias(x)
 
         assert out1.shape == out2.shape == (4, 10, 4)
+
+        # Verify no bias parameters exist
+        assert layer_no_bias.bias1_r is None
+        assert layer_no_bias.bias2_r is None
 
     def test_idempotent_round_trip(self):
         """Test that idempotent conversion is reversible."""
@@ -109,6 +141,43 @@ class TestBiComplexLinear:
         out2 = layer(x)
 
         torch.testing.assert_close(out1, out2)
+
+    def test_idempotent_input_output_formats(self):
+        """Test idempotent input/output format options."""
+        x = torch.randn(4, 5, 4)
+        z1, z2 = to_idempotent(x)
+
+        # Idempotent input, standard output
+        layer1 = BiComplexLinear(5, 10, input_format='idempotent')
+        out1 = layer1((z1, z2))
+        assert isinstance(out1, torch.Tensor) and out1.shape[-1] == 4
+
+        # Standard input, idempotent output
+        layer2 = BiComplexLinear(5, 10, output_format='idempotent')
+        out2 = layer2(x)
+        assert isinstance(out2, tuple) and len(out2) == 2
+
+    def test_coupled_bias_gradients(self):
+        """Test that bias gradients are coupled (mixed real+imag error signal)."""
+        layer = BiComplexLinear(3, 4, shared_weights=True,
+                                input_format='idempotent', output_format='idempotent')
+        z = torch.randn(2, 3, dtype=torch.cfloat)
+        out1, out2 = layer((z, z.clone()))
+        loss = out1.abs().sum() + out2.abs().sum()
+        loss.backward()
+
+        # bias_r grad should be dL/d(re) + dL/d(im), NOT just dL/d(re)
+        # Verify by comparing against a decoupled complex bias
+        W = layer.weight1.data.clone()
+        b_complex = nn.Parameter(_coupled_bias(layer.bias1_r, layer.bias1_i).data.clone())
+        z2 = z.data.clone()
+        out_ref = F.linear(z2, W, b_complex)
+        (out_ref.abs().sum() * 2).backward()
+
+        # Decoupled grad would be just dL/d(re) and dL/d(im) separately
+        # Coupled grad(b_r) = dL/d(re) + dL/d(im) which differs
+        assert not torch.allclose(layer.bias1_r.grad, b_complex.grad.real), \
+            "Bias gradient should be coupled (differ from decoupled complex bias)"
 
 
 @pytest.fixture

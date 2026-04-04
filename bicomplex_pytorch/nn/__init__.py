@@ -23,7 +23,6 @@ from .modules import (
     # Linear layers
     BiComplexLinear,
     BiComplexLinearFull,
-    BiComplexLinearDiagonal,
 )
 
 # =============================================================================
@@ -49,7 +48,6 @@ __all__ = [
     # Linear layers (implemented)
     "BiComplexLinear",
     "BiComplexLinearFull",
-    "BiComplexLinearDiagonal",
     # Convolution layers (planned)
     # "BiComplexConv1d",
     # "BiComplexConv2d",
