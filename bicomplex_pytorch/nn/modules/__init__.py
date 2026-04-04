@@ -6,9 +6,10 @@ bicomplex neural networks, following PyTorch's nn module conventions.
 
 Implemented:
 - Linear layers (BiComplexLinear, BiComplexLinearFull)
+- Convolution layers (ComplexConv2d, ComplexConv3d, BiComplexConv2d, BiComplexConv3d)
+- Dropout layers (ComplexDropout, BiComplexDropout)
 
 Planned (stubs):
-- Convolution layers
 - Pooling layers
 - Normalization layers
 - Dropout layers (ComplexDropout, BiComplexDropout)
@@ -24,16 +25,18 @@ from .linear import (
 )
 
 # =============================================================================
-# Convolution Layers (Not yet implemented)
+# Convolution Layers
 # =============================================================================
-# from bicomplex_pytorch.nn.modules.conv import (
-#     BiComplexConv1d,
-#     BiComplexConv2d,
-#     BiComplexConv3d,
-#     BiComplexConvTranspose1d,
-#     BiComplexConvTranspose2d,
-#     BiComplexConvTranspose3d,
-# )
+from .conv import (
+    ComplexConv2d,
+    ComplexConv3d,
+    BiComplexConv2d,
+    BiComplexConv3d,
+)
+
+# Future:
+# from .conv import ComplexConv1d, BiComplexConv1d
+# from .conv import ComplexConvTranspose2d, BiComplexConvTranspose2d
 
 # =============================================================================
 # Pooling Layers (Not yet implemented)
@@ -85,13 +88,11 @@ __all__ = [
     # Linear (implemented)
     "BiComplexLinear",
     "BiComplexLinearFull",
-    # Convolution (planned)
-    # "BiComplexConv1d",
-    # "BiComplexConv2d",
-    # "BiComplexConv3d",
-    # "BiComplexConvTranspose1d",
-    # "BiComplexConvTranspose2d",
-    # "BiComplexConvTranspose3d",
+    # Convolution (implemented)
+    "ComplexConv2d",
+    "ComplexConv3d",
+    "BiComplexConv2d",
+    "BiComplexConv3d",
     # Pooling (planned)
     # "BiComplexMaxPool1d",
     # "BiComplexMaxPool2d",
