@@ -23,6 +23,14 @@ from .modules import (
     # Linear layers
     BiComplexLinear,
     BiComplexLinearFull,
+    # Convolution layers
+    ComplexConv2d,
+    ComplexConv3d,
+    BiComplexConv2d,
+    BiComplexConv3d,
+    # Dropout layers
+    ComplexDropout,
+    BiComplexDropout,
 )
 
 # =============================================================================
@@ -48,10 +56,11 @@ __all__ = [
     # Linear layers (implemented)
     "BiComplexLinear",
     "BiComplexLinearFull",
-    # Convolution layers (planned)
-    # "BiComplexConv1d",
-    # "BiComplexConv2d",
-    # "BiComplexConv3d",
+    # Convolution layers (implemented)
+    "ComplexConv2d",
+    "ComplexConv3d",
+    "BiComplexConv2d",
+    "BiComplexConv3d",
     # Pooling layers (planned)
     # "BiComplexMaxPool1d",
     # "BiComplexMaxPool2d",
@@ -60,9 +69,9 @@ __all__ = [
     # "BiComplexBatchNorm1d",
     # "BiComplexBatchNorm2d",
     # "BiComplexLayerNorm",
-    # Dropout layers (planned)
-    # "BiComplexDropout",
-    # "BiComplexDropout2d",
+    # Dropout layers (implemented)
+    "ComplexDropout",
+    "BiComplexDropout",
     # Attention layers (planned)
     # "BiComplexMultiHeadAttention",
 ]
